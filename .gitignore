@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.py[cod]
+
+data/
+output/
+model/
+
+*.pt
+*.pth
+*.npz
+*.csv
+*.xlsx
+
+.ipynb_checkpoints/
+.env
+.env.*
