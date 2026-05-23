@@ -8,3 +8,4 @@ pydantic==2.13.3
 torch==2.11.0
 tqdm==4.67.3
 uvicorn==0.46.0
+PyYAML==6.0.3

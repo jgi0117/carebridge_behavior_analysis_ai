@@ -1,0 +1,19 @@
+project:
+  name: behavior_analysis
+
+paths:
+  raw_dataset: data/raw
+  output_root: output
+  risk_master: output/risk_detection_master
+  preprocessed: output/behavior_preprocessed
+  window_data: output/behavior_window_1h
+  model_output: output/lstm_window_1h_baseline
+  model_artifact: output/lstm_window_1h_baseline/best_lstm_window_1h.pt
+  model_artifact_fallback: model/best_lstm_window_1h.pt
+
+app:
+  labels:
+    0: 기타
+    1: 수면
+    2: 외출
+    3: 식사

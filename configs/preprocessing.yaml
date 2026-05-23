@@ -1,0 +1,46 @@
+preprocessing:
+  use_only_b: true
+  chunksize: 200000
+  target_col: target_behavior
+  target_id_col: target_behavior_id
+  base_keep_cols:
+    - sample_key
+    - split
+    - person_id
+    - sex
+    - seq
+    - seq_num
+    - timestamp
+    - age
+    - gender
+    - environment
+    - em_temperature
+    - em_humidity
+    - em_illuminance
+    - em_activity_ir
+    - em_co2
+    - em_tvoc
+    - em_label
+
+window:
+  name: 1h
+  size: 6
+  stride: 1
+  gap_sec: 3600
+  target_col: target_behavior_id
+  feature_cols:
+    - em_temperature
+    - em_humidity
+    - em_illuminance
+    - em_activity_ir
+    - em_co2
+    - em_tvoc
+    - em_activity_ir_log1p
+    - em_co2_log1p
+    - em_tvoc_log1p
+    - em_illuminance_log1p
+    - hour
+    - weekday
+    - age
+    - gender_id
+    - environment_id
