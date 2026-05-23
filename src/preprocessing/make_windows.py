@@ -11,6 +11,10 @@ from utils.config import configured_path, load_config
 from utils.io import list_part_files, reset_dir, save_json
 
 
+# ---------------------------------------------------------
+# split 단위 window 생성
+# ---------------------------------------------------------
+# 전처리된 CSV part를 읽어 LSTM이 바로 학습할 수 있는 npz 파일로 저장합니다.
 def make_split(files: list[Path], save_dir: Path, split_name: str, config: dict) -> dict:
     summary = {
         "split": split_name,
@@ -43,6 +47,9 @@ def make_split(files: list[Path], save_dir: Path, split_name: str, config: dict)
 
 
 def main() -> None:
+    # -----------------------------------------------------
+    # 설정 및 입출력 경로 준비
+    # -----------------------------------------------------
     config = load_config("paths.yaml", "preprocessing.yaml")
     input_root = configured_path("preprocessed", config)
     save_root = configured_path("window_data", config)

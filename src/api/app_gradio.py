@@ -17,6 +17,9 @@ from inference import get_device, load_labels, load_model
 from utils.config import model_artifact_path
 
 
+# ---------------------------------------------------------
+# 데모용 모델 로딩
+# ---------------------------------------------------------
 DEVICE = get_device()
 ID_TO_LABEL = load_labels()
 MODEL_PATH = model_artifact_path()
@@ -26,6 +29,7 @@ INPUT_SIZE = ckpt["input_size"]
 
 
 def make_sensor_row(step: int):
+    # 실제 센서 입력 대신 데모용 랜덤 센서 값을 생성합니다.
     temperature = round(random.uniform(20.0, 28.0), 2)
     humidity = round(random.uniform(35.0, 70.0), 2)
     illuminance = round(random.uniform(0.0, 700.0), 2)
@@ -66,6 +70,7 @@ def make_sensor_row(step: int):
 
 @torch.no_grad()
 def predict_from_window(window):
+    # 최근 window가 충분히 쌓였을 때만 모델에 입력합니다.
     x = np.array(window, dtype=np.float32)
     if x.shape != (WINDOW_SIZE, INPUT_SIZE):
         return "waiting", {}, 0.0
@@ -79,6 +84,7 @@ def predict_from_window(window):
 
 
 def start_simulation():
+    # 5초마다 센서값을 하나씩 추가하고, window가 차면 행동을 예측합니다.
     window = deque(maxlen=WINDOW_SIZE)
     for step in range(1, 10_000):
         row, sensor_view = make_sensor_row(step)

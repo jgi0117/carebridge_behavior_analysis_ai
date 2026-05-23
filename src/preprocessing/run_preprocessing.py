@@ -11,6 +11,10 @@ from utils.config import configured_path, load_config
 from utils.io import list_part_files, reset_dir, save_json, read_csv_safe
 
 
+# ---------------------------------------------------------
+# split 단위 전처리
+# ---------------------------------------------------------
+# train_parts, valid_parts에 있는 part_*.csv를 순회하면서 동일한 feature 정리를 적용합니다.
 def preprocess_split(
     files: list[Path],
     save_dir: Path,
@@ -42,6 +46,7 @@ def preprocess_split(
             engine="python",
             on_bad_lines="warn",
         ):
+            # 대용량 CSV를 고려해 chunksize 단위로 읽고 처리합니다.
             input_rows += len(chunk)
             processed = preprocess_chunk(
                 chunk,
@@ -75,6 +80,9 @@ def preprocess_split(
 
 
 def main() -> None:
+    # -----------------------------------------------------
+    # 설정 및 입출력 경로 준비
+    # -----------------------------------------------------
     config = load_config("paths.yaml", "preprocessing.yaml")
     raw_root = configured_path("risk_master", config)
     save_root = configured_path("preprocessed", config)
@@ -92,6 +100,7 @@ def main() -> None:
     if not train_files:
         raise FileNotFoundError(f"train part files not found: {raw_root / 'train_parts'}")
 
+    # train split에서만 category mapping을 만든 뒤 train/valid에 동일하게 적용합니다.
     mappings = collect_train_mappings(
         train_files,
         use_only_b=bool(config["preprocessing"]["use_only_b"]),

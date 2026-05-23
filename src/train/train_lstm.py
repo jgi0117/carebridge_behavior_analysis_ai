@@ -19,6 +19,9 @@ from utils.io import save_json
 
 
 def main() -> None:
+    # -----------------------------------------------------
+    # 설정 로딩 및 학습 환경 준비
+    # -----------------------------------------------------
     config = load_config("paths.yaml", "training.yaml")
     training_cfg = config["training"]
     seed_everything(int(training_cfg["seed"]))
@@ -28,6 +31,9 @@ def main() -> None:
     save_dir = configured_path("model_output", config)
     save_dir.mkdir(parents=True, exist_ok=True)
 
+    # -----------------------------------------------------
+    # window npz 데이터셋 로딩
+    # -----------------------------------------------------
     train_dataset = WindowNPZDataset(data_root / "train_parts")
     valid_dataset = WindowNPZDataset(data_root / "valid_parts")
 
@@ -50,6 +56,9 @@ def main() -> None:
         pin_memory=False,
     )
 
+    # -----------------------------------------------------
+    # 모델, 손실 함수, optimizer 준비
+    # -----------------------------------------------------
     model = LSTMBaseline(
         input_size=input_size,
         hidden_size=int(training_cfg["hidden_size"]),
@@ -69,6 +78,9 @@ def main() -> None:
     print("[INFO] input_size:", input_size)
     print("[INFO] num_classes:", num_classes)
 
+    # -----------------------------------------------------
+    # 학습 루프
+    # -----------------------------------------------------
     for epoch in range(1, int(training_cfg["epochs"]) + 1):
         print(f"\n========== Epoch {epoch}/{training_cfg['epochs']} ==========")
         train_result = train_one_epoch(model, train_loader, criterion, optimizer, device, epoch)
@@ -90,6 +102,7 @@ def main() -> None:
         )
 
         if valid_result["acc"] > best_valid_acc:
+            # validation accuracy가 개선될 때만 best checkpoint를 갱신합니다.
             best_valid_acc = valid_result["acc"]
             feature_cols = np.load(train_dataset.files[0])["feature_cols"].tolist()
             torch.save(

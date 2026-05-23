@@ -7,6 +7,10 @@ import torch
 from tqdm import tqdm
 
 
+# ---------------------------------------------------------
+# 재현성 설정
+# ---------------------------------------------------------
+# 같은 seed로 실행했을 때 가능한 한 비슷한 학습 결과가 나오도록 난수를 고정합니다.
 def seed_everything(seed: int) -> None:
     import random
 
@@ -17,6 +21,7 @@ def seed_everything(seed: int) -> None:
 
 
 def compute_class_weight(y: np.ndarray, num_classes: int) -> torch.Tensor:
+    # 클래스별 데이터 수가 불균형할 때 손실 함수에 가중치를 줘서 보정합니다.
     counter = Counter(y.tolist())
     total = len(y)
     weights = []
@@ -27,6 +32,7 @@ def compute_class_weight(y: np.ndarray, num_classes: int) -> torch.Tensor:
 
 
 def train_one_epoch(model, loader, criterion, optimizer, device, epoch: int) -> dict:
+    # 한 epoch 동안 train loader를 순회하며 파라미터를 업데이트합니다.
     model.train()
     total_loss = 0.0
     total_correct = 0
@@ -57,6 +63,7 @@ def train_one_epoch(model, loader, criterion, optimizer, device, epoch: int) -> 
 
 @torch.no_grad()
 def evaluate(model, loader, criterion, device, num_classes: int, epoch: int) -> dict:
+    # validation에서는 gradient를 계산하지 않고 loss/accuracy만 측정합니다.
     model.eval()
     total_loss = 0.0
     total_correct = 0

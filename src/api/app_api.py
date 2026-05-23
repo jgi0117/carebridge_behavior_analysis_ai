@@ -16,6 +16,11 @@ from inference import get_device, load_labels, load_model
 from utils.config import model_artifact_path
 
 
+# ---------------------------------------------------------
+# 모델 로딩
+# ---------------------------------------------------------
+# API 프로세스가 시작될 때 checkpoint를 한 번만 로드합니다.
+# 요청마다 모델을 다시 읽지 않기 때문에 예측 응답이 빨라집니다.
 DEVICE = get_device()
 ID_TO_LABEL = load_labels()
 MODEL_PATH = model_artifact_path()
@@ -27,6 +32,11 @@ NUM_CLASSES = ckpt["num_classes"]
 FEATURE_COLS = ckpt.get("feature_cols", [])
 
 
+# ---------------------------------------------------------
+# 요청/응답 스키마
+# ---------------------------------------------------------
+# sequence는 학습 때 사용한 window shape와 같아야 합니다.
+# 현재 checkpoint 기준으로는 보통 (6, 15) 형태입니다.
 class PredictRequest(BaseModel):
     sequence: List[List[float]] = Field(
         ...,
@@ -41,6 +51,9 @@ class PredictResponse(BaseModel):
     probabilities: dict[str, float]
 
 
+# ---------------------------------------------------------
+# FastAPI 앱 정의
+# ---------------------------------------------------------
 app = FastAPI(
     title="Behavior Prediction API",
     description="LSTM behavior prediction API based on a sensor time window.",
@@ -79,6 +92,7 @@ def model_info():
 @app.post("/predict", response_model=PredictResponse)
 @torch.no_grad()
 def predict(request: PredictRequest):
+    # 입력 검증: 모델은 고정된 window 길이와 feature 개수만 받을 수 있습니다.
     arr = np.array(request.sequence, dtype=np.float32)
     if arr.ndim != 2:
         raise HTTPException(status_code=400, detail=f"sequence must be 2D. current shape={arr.shape}")
@@ -87,6 +101,7 @@ def predict(request: PredictRequest):
     if arr.shape[1] != INPUT_SIZE:
         raise HTTPException(status_code=400, detail=f"feature count must be {INPUT_SIZE}. current={arr.shape[1]}")
 
+    # 추론: softmax 확률 중 가장 큰 클래스를 최종 행동으로 선택합니다.
     x = torch.from_numpy(arr).unsqueeze(0).to(DEVICE)
     probs = torch.softmax(model(x), dim=1).cpu().numpy()[0]
     pred_id = int(np.argmax(probs))

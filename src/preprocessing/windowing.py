@@ -8,6 +8,10 @@ import pandas as pd
 from utils.io import read_csv_safe
 
 
+# ---------------------------------------------------------
+# 입력 컬럼 검증
+# ---------------------------------------------------------
+# window 생성에 필요한 시간, 라벨, feature 컬럼이 모두 있는지 먼저 확인합니다.
 def check_required_columns(df: pd.DataFrame, path: Path, target_col: str, feature_cols: list[str]) -> None:
     missing = [col for col in ["sample_key", "timestamp", target_col] + feature_cols if col not in df.columns]
     if missing:
@@ -15,6 +19,8 @@ def check_required_columns(df: pd.DataFrame, path: Path, target_col: str, featur
 
 
 def add_segment_id(df: pd.DataFrame, gap_sec: int) -> pd.DataFrame:
+    # 같은 sample 안에서도 시간 간격이 너무 크게 벌어지면 연속 시계열로 보기 어렵습니다.
+    # gap_sec보다 큰 시간 차이가 나오면 새로운 segment로 분리합니다.
     sort_cols = ["sample_key", "timestamp"]
     if "seq_num" in df.columns:
         sort_cols.append("seq_num")
@@ -35,6 +41,8 @@ def make_windows_from_segment(
     window_size: int,
     stride: int,
 ):
+    # 하나의 연속 segment에서 sliding window를 만듭니다.
+    # 각 window의 라벨은 window 마지막 시점의 target 값을 사용합니다.
     if len(segment) < window_size:
         return None
 
@@ -64,6 +72,7 @@ def make_windows_from_segment(
 
 
 def make_window_file(path: Path, save_path: Path, split_name: str, config: dict) -> dict:
+    # CSV part 하나를 읽어 여러 개의 LSTM 학습용 window로 변환합니다.
     target_col = config["window"]["target_col"]
     feature_cols = config["window"]["feature_cols"]
     window_size = int(config["window"]["size"])
@@ -82,6 +91,7 @@ def make_window_file(path: Path, save_path: Path, split_name: str, config: dict)
 
     for col in feature_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce")
+    # window 생성 직전 남은 결측 feature는 앞뒤 값으로 보정합니다.
     df[feature_cols] = df[feature_cols].ffill().bfill()
     df = df.dropna(subset=feature_cols + [target_col]).copy()
 
@@ -123,6 +133,8 @@ def make_window_file(path: Path, save_path: Path, split_name: str, config: dict)
     y = np.concatenate([item["y"] for item in outputs], axis=0)
     save_path.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(
+        # X: (num_windows, window_size, num_features)
+        # y: (num_windows,)
         save_path,
         X=X,
         y=y,

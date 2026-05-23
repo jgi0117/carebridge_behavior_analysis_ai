@@ -3,6 +3,10 @@ from __future__ import annotations
 import torch.nn as nn
 
 
+# ---------------------------------------------------------
+# LSTM baseline 모델
+# ---------------------------------------------------------
+# window 단위 센서 시계열을 입력받아 마지막 hidden state로 행동 클래스를 분류합니다.
 class LSTMBaseline(nn.Module):
     def __init__(
         self,
@@ -27,5 +31,6 @@ class LSTMBaseline(nn.Module):
         )
 
     def forward(self, x):
+        # x shape: (batch, window_size, num_features)
         out, _ = self.lstm(x)
         return self.classifier(out[:, -1, :])
